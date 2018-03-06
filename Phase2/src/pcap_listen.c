@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#include "osi_headers.h"
 #include "crack/crack.h"
 #include "obfuscate.h"
 #include "crypto.h"
 #include "fileio.h"
+#include "packets.h"
 // /
 
 int main(int argc, char *argv[]){
