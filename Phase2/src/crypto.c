@@ -80,10 +80,10 @@ void demo(){
 
     /* A 128 bit key */
     unsigned char *key1 = (unsigned char *)"770A8A65DA156D24EE2A093277530142";
-    unsigned char *key2 = (unsigned char *)"770A8A65DA156D2318DAEF761B189D12";
+    unsigned char *key2 = (unsigned char *)"770A8A65DA156D24EE2A093277530142";
 
     /* A 128 bit IV */
-    unsigned char *iv = (unsigned char *)"F5502320F8429037B8DAEF761B189D12";
+    unsigned char *iv = (unsigned char *)"E7C6357864F322AF2EC892CC2D4E4EBA";
 
     /* Message to be encrypted */
     unsigned char *plaintext = (unsigned char *)"CMPS122 is an awesome class!";
@@ -118,5 +118,38 @@ void demo(){
     printf("Decrypted text is:\n");
     printf("%s\n", decryptedtext);
 }
+
+
+int test_iv_key(unsigned char *key, unsigned char *iv){
+    /* Message to be encrypted */
+    unsigned char *plaintext = (unsigned char *)"CMPS122 is an awesome class!";
+
+    /* Buffer for ciphertext. Ensure the buffer is long enough for the
+     * ciphertext which may be longer than the plaintext, dependant on the
+     * algorithm and mode
+     */
+    unsigned char ciphertext[128];
+
+    /* Buffer for the decrypted text */
+    unsigned char decryptedtext[128];
+
+    int decryptedtext_len, ciphertext_len;
+
+    /* Encrypt the plaintext */
+    ciphertext_len = encrypt (plaintext, strlen ((char *)plaintext), key, iv, ciphertext);
+
+    decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
+    if(decryptedtext_len == -1){
+        exit(1);
+    }
+    decryptedtext[decryptedtext_len] = '\0';
+
+    if(strcmp(plaintext, decryptedtext) == 0){
+        return 0;
+    }else{
+        return -1;
+    }
+}
+
 
 

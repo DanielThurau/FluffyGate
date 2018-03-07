@@ -26,7 +26,7 @@ struct Devious{
 };
 
 void dump_devious(struct Devious *d);
-
+int analyze_keys(char **keys, int num_keys, char* iv);
 
 
 int main(int argc, char *argv[]){
@@ -82,13 +82,15 @@ int main(int argc, char *argv[]){
         int len = unpack(path_to_iv, &raw);
         if(len > 32){
             sanitize(&breakout.iv, raw, size);
-            breakout.iv_len = size;    
+            breakout.iv_len = size;
+            dump_buffer(breakout.iv, breakout.iv_len);  
         }else if(len == -1){
             breakout.iv = (char*)calloc(size, sizeof(char));
             //printf("%s\n",path_to_iv);
             strncpy(breakout.iv, path_to_iv, size);
             breakout.iv_len = size;    
         }
+        
     }
 
     if(path_to_pass != NULL){
@@ -98,71 +100,85 @@ int main(int argc, char *argv[]){
             breakout.pass = path_to_pass;
             breakout.pass_len = SIZE_PASSWORD;
         }
+        dump_buffer(breakout.pass, strlen(breakout.pass));
     }
 
     if(path_to_zip != NULL){
         u_char *raw = calloc(2000, sizeof(char));
         int len = unpack(path_to_zip, &raw);
-
-        write_buffer("test.zip",raw,len);
+        char *outfile = remove_ext(path_to_zip, '.', '/');
+        write_buffer(outfile,raw,len);
+        free(outfile);
     }
 
     if(path_to_keys != NULL){
         char *raw;
         int len;
 
+        // Read all the keys
         len = ReadFile(path_to_keys, &raw);
+
+        // Sanatize buffer of newlines
+        if(raw[len-1] == '\n'){
+            char* newraw;
+            sanitize(&newraw, raw, len-1);
+            free(raw);
+            raw = newraw; len = len -1;
+        }
 
         breakout.key_set = (char**) calloc(len - size, sizeof(char*));
         breakout.num_keys = deobfuscate(raw, size, breakout.key_set);
-
     }
 
+
+
     if(path_to_cipher != NULL){
-        u_char *raw; //= calloc(2000, sizeof(u_char));
+        u_char *raw;
         char* deciphertext = calloc(1000, sizeof(u_char));
         breakout.cipher_len = unpack(path_to_cipher, &raw);
         breakout.cipher = (u_char*)calloc(breakout.cipher_len, sizeof(u_char));
+        // char **cipher = calloc(1,sizeof(char*));
+        // printf("%s\n",raw);
         breakout.cipher = raw;
-        // strncpy(breakout.cipher, raw, breakout.cipher_len);
+        // printf("%s\n",*cipher);
 
-        dump_buffer(breakout.cipher, breakout.cipher_len);
-        printf("--------------------------------------\n");
-
-
-
-        // char *cipher_text = calloc(2000, sizeof(char));
-        // // int len = ReadFile("backups/message.cipher", &cipher_text);
-        // printf("noped: %d\n", len);
-        // dump_buffer(cipher_text, len);
-        // printf("\n--------------------------------------\n");
+        // write_buffer("")
+        /* 
+            test that all of my data is good so far
+        */ 
+        int correct = analyze_keys(breakout.key_set, breakout.num_keys, breakout.iv);
+        int incorrect = breakout.num_keys - correct;
 
 
-/*
+        printf("Number of correct keys   : %d\nNumber of incorrect keys : %d\n",correct, incorrect);
 
-        printf("%d\n", breakout.num_keys);
+
+
+
+
         for(int i = 0; i < breakout.num_keys; i++){
-            int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, "0C8513C2D0A7A07F3BE8744090BF10E3", breakout.iv, deciphertext);
+            int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, breakout.key_set[i], breakout.iv, deciphertext);
             // int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, "BEDDEE76C5B9DD1CC753F7DFB2986D37", "CA3879E06C455CE1EF427B7E6C3B635D", deciphertext);
             if(deciphertext_len != -1){
                 printf("this key worked: %s\n",breakout.key_set[i]);
-                printf("%s\n",deciphertext);
+                printf("%s",deciphertext);
                 break;
             }
-            printf("\n---------------\n%s\n---------------------\n",breakout.key_set[i]);
-            printf("%s\n",deciphertext);
         }
-*/
-    }
 
-    // printf("%s\n",breakout.iv);
-
-    // dump_devious(&breakout);
+   }
 }
 
 
-
-
+int analyze_keys(char **keys, int num_keys, char* iv){
+    int successful_keys = 0;
+    for(int i = 0; i < num_keys; i++){
+        if(test_iv_key(keys[i], iv) == 0){
+            successful_keys++;
+        }
+    }
+    return successful_keys;
+}
 
 void dump_devious(struct Devious *d){
     printf("IV length: %d\nIV: ",d->iv_len);

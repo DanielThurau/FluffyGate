@@ -31,3 +31,4 @@ int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
  */
 void demo(void);
 
+int test_iv_key(unsigned char *key, unsigned char *iv);

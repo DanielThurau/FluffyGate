@@ -1,4 +1,8 @@
 from zipfile import ZipFile
+import sys
 
-with ZipFile('test.zip') as zf:
-    zf.extractall(pwd='fluffy')
+password = sys.argv[1]
+zipfile = sys.argv[2]
+
+with ZipFile(zipfile) as zf:
+	zf.extractall(pwd=password)
