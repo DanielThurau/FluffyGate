@@ -9,10 +9,10 @@ LIBS = -lpcap -lcrypt -lcrypto -lssl
 
 MAIN_LISTEN = src/pcap_listen.c
 MAIN_OPEN = src/pcap_open.c
-MAIN_TEST =src/test_crypto.c
+MAIN_TEST = src/test_crypto.c
+MAIN_SORT = src/pcap_sort.c
 
-
-all: pcap_listen pcap_open
+all: pcap_listen pcap_open pcap_sort
 
 debug:
 	chmod +x bin/run.sh 
@@ -23,12 +23,14 @@ test:
 	bin/run.sh false
 
 
-pcap_listen: $(MAIN_LISTEN) $(CRACK) $(OBF) $(FILEIO)
+pcap_listen: $(MAIN_LISTEN) $(CRACK) $(OBF) $(FILEIO) $(PACKETS)
 	gcc -o bin/pcap_listen $(MAIN_LISTEN) $(HEADERS) $(CRACK) $(OBF) $(CRYPTO) $(FILEIO) $(PACKETS) $(LIBS)
 
-
-pcap_open: $(MAIN_OPEN) $(CRACK) $(OBF) $(FILEIO)
+pcap_open: $(MAIN_OPEN) $(CRACK) $(OBF) $(FILEIO) $(PACKETS)
 	gcc -o bin/pcap_open $(MAIN_OPEN) $(HEADERS) $(CRACK) $(OBF) $(CRYPTO) $(FILEIO) $(PACKETS) $(LIBS)
+
+pcap_sort: $(MAIN_SORT) $(FILEIO) $(PACKETS)
+	gcc -o bin/pcap_sort $(MAIN_SORT) $(HEADERS) $(FILEIO) $(PACKETS) $(LIBS)
 
 test_crypto: src/test_crypto.c src/crypto.h src/crypto.c
 	gcc -o bin/test_crypto src/test_crypto.c src/crypto.h src/crypto.c -lcrypto
