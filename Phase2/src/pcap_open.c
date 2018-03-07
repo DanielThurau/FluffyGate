@@ -12,6 +12,9 @@
 
 #include <string.h>
 #define SIZE_PASSWORD 6
+#define WORDCOUNT_TRIGGER 10.0
+#define PERCENT_MATCH 0.05
+
 
 struct Devious{
     char *iv;
@@ -27,7 +30,7 @@ struct Devious{
 
 void dump_devious(struct Devious *d);
 int analyze_keys(char **keys, int num_keys, char* iv);
-
+int check_heuristic(char *text, int text_len);
 
 int main(int argc, char *argv[]){
     char *path_to_iv = NULL;
@@ -137,10 +140,7 @@ int main(int argc, char *argv[]){
         char* deciphertext = calloc(1000, sizeof(u_char));
         breakout.cipher_len = unpack(path_to_cipher, &raw);
         breakout.cipher = (u_char*)calloc(breakout.cipher_len, sizeof(u_char));
-        // char **cipher = calloc(1,sizeof(char*));
-        // printf("%s\n",raw);
         breakout.cipher = raw;
-        // printf("%s\n",*cipher);
 
         // write_buffer("")
         /* 
@@ -158,11 +158,10 @@ int main(int argc, char *argv[]){
 
         for(int i = 0; i < breakout.num_keys; i++){
             int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, breakout.key_set[i], breakout.iv, deciphertext);
-            // int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, "BEDDEE76C5B9DD1CC753F7DFB2986D37", "CA3879E06C455CE1EF427B7E6C3B635D", deciphertext);
             if(deciphertext_len != -1){
-                printf("this key worked: %s\n",breakout.key_set[i]);
-                printf("%s",deciphertext);
-                break;
+                if(check_heuristic(deciphertext, deciphertext_len)){
+                    write_buffer("test.txt",deciphertext, deciphertext_len);
+                }
             }
         }
 
@@ -185,4 +184,62 @@ void dump_devious(struct Devious *d){
     dump_buffer(d->iv, d->iv_len);
     printf("Password length: %d\nPassword: ",d->pass_len);
     dump_buffer(d->pass, d->pass_len);
+}
+
+
+int check_heuristic(char *text, int text_len){
+    const char * heuristic[][1] = {
+        {"of"},
+        {"the"},
+        {"that"},
+        {"thou"},
+        {"ye"},
+        {"thee"},
+        {"thine"},
+        {"thy"},
+        {"art"},
+        {"dost"},
+        {"doth"},
+        {"ere"},
+        {"hast"},
+        {"tis"},
+        {"and"},
+        {"i"},
+        {"I"},
+        {"to"},
+        {"you"},
+        {"my"},
+        {"in"},
+        {"is"},
+        {"not"},
+        {"with"},
+        {"me"},
+        {"it"}
+    };
+
+    // count words
+    float total_words = 0;
+    for(int i = 0; i < text_len; i++){
+        if(text[i] == ' '){
+            total_words++;
+        }
+    }
+
+    // count word matches of english dictionary
+    float matches = 0;
+    for(int i = 0; i < sizeof(heuristic)/sizeof(heuristic[0]); i++){
+        // count duplicates?
+        if(strstr(text, heuristic[i][0]) != NULL){
+            matches++;
+        }
+    }
+
+    // if there are enough words, and a certain percent is matched
+    float d = matches / total_words;
+    if(d > PERCENT_MATCH && total_words > WORDCOUNT_TRIGGER){
+        return 1;
+    }else{
+        return 0;
+    }
+
 }

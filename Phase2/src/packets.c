@@ -76,6 +76,25 @@ int get_payload(const struct pcap_pkthdr *header, const u_char *packet, u_char *
     }
     tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
     size_tcp = TH_OFF(tcp)*4;
+
+    // printf("%c\n",tcp->th_flags);
+    if (tcp->th_flags & TH_FIN)
+        // printf("FIN set\n");
+    if (tcp->th_flags & TH_SYN)
+        // printf("SYN set\n");
+    if (tcp->th_flags & TH_RST)
+        // printf("RST set\n");
+    if (tcp->th_flags & TH_PUSH)
+        // printf("PUSH set\n");
+    if (tcp->th_flags & TH_ACK)
+        // printf("ACK set\n");
+    if (tcp->th_flags & TH_URG)
+        // printf("URG set\n");
+    if (tcp->th_flags & TH_ECE)
+        // printf("ECE set\n");
+    if (tcp->th_flags & TH_CWR)
+        // printf("CWR set\n");
+
     if (size_tcp < 20) {
         printf(" * Invalid TCP header length: %u bytes\n", size_tcp);
         return -1;
@@ -85,7 +104,6 @@ int get_payload(const struct pcap_pkthdr *header, const u_char *packet, u_char *
     for(u_int i = 0; i < size_payload; i++){
         payload[0][i] = (u_char)(packet + SIZE_ETHERNET + size_ip + size_tcp+i)[0];
     }
-
     return size_payload;
 }
 
