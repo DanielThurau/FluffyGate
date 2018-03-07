@@ -160,7 +160,9 @@ int main(int argc, char *argv[]){
             int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, breakout.key_set[i], breakout.iv, deciphertext);
             if(deciphertext_len != -1){
                 if(check_heuristic(deciphertext, deciphertext_len)){
-                    write_buffer("test.txt",deciphertext, deciphertext_len);
+                    // write_buffer("test.txt",deciphertext, deciphertext_len);
+                    dump_buffer(deciphertext, deciphertext_len);
+
                 }
             }
         }
