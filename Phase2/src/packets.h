@@ -23,3 +23,4 @@ char *password_packet(const char *path_to_pass_file);
 
 void sanitize(char **destination, char *source, int size);
 
+// int unpack_buffer(char *buffer, u_char **payload);

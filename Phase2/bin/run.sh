@@ -41,11 +41,12 @@ fi
 ./bin/pcap_open -z $pcap_zipfile 
 
 zipfile=$(echo $pcap_zipfile | grep -Po '.*(?=\.)')
-
+echo $zipfile 
 
 python ./python/unzipping.py $pass $zipfile
 
-cp key $data_dir
+rm $zipfile
+mv key $data_dir
 
 
 # =============================================

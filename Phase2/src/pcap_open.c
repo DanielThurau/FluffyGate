@@ -31,6 +31,9 @@ struct Devious{
 void dump_devious(struct Devious *d);
 int analyze_keys(char **keys, int num_keys, char* iv);
 int check_heuristic(char *text, int text_len);
+int check_ascii(char *text, int text_len);
+void rot_k(char *e_text, int e_text_len, char**d_text, int k);
+
 
 int main(int argc, char *argv[]){
     char *path_to_iv = NULL;
@@ -169,11 +172,18 @@ int main(int argc, char *argv[]){
         for(int i = 0; i < breakout.num_keys; i++){
             int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, breakout.key_set[i], breakout.iv, deciphertext);
             if(deciphertext_len != -1){
-                if(check_heuristic(deciphertext, deciphertext_len)){
-                    // write_buffer("test.txt",deciphertext, deciphertext_len);
-                    if(strstr(deciphertext, "dthurau") != NULL){
-                        write_buffer("test.txt",deciphertext, deciphertext_len);
+                if(check_ascii(deciphertext, deciphertext_len)){
+                    // dump_buffer(deciphertext, deciphertext_len);
+                    char **d_text = (char**)calloc(1,sizeof(char*));
+                    for(int j = 0; j < 27; j++){
+
+                        rot_k(deciphertext, deciphertext_len, d_text, j);
+                        // dump_buffer(d_text[0], deciphertext_len);
+                        
                     }
+                    // if(strstr(deciphertext, "dthurau") != NULL){
+                    //     write_buffer("test.txt",deciphertext, deciphertext_len);
+                    // }
 
                 }
             }
@@ -198,6 +208,22 @@ void dump_devious(struct Devious *d){
     dump_buffer(d->iv, d->iv_len);
     printf("Password length: %d\nPassword: ",d->pass_len);
     dump_buffer(d->pass, d->pass_len);
+}
+
+int check_ascii(char *text, int text_len){
+    float ascii_char = 0;
+    for(int i = 0; i < text_len; i++){
+        if(isalpha(text[i]) || isdigit(text[i])){
+            ascii_char++;
+        }
+    }
+    if(ascii_char/(float)text_len > 0.50){
+        return 1;
+    }else{
+        return 0;
+    }
+
+
 }
 
 
@@ -256,4 +282,33 @@ int check_heuristic(char *text, int text_len){
         return 0;
     }
 
+}
+
+void rot_k(char *e_text, int e_text_len, char**d_text, int k){
+    char ch;
+    *d_text = (char*)calloc(e_text_len, sizeof(char));
+    
+    for(int i = 0; i < e_text_len; ++i){
+        ch = e_text[i];
+        if(ch >= 'a' && ch <= 'z'){
+            ch = ch - k;
+            if(ch < 'a'){
+                ch = ch + 'z' - 'a' + 1;
+            }
+            
+            d_text[0][i] = ch;
+        }
+        else if(ch >= 'A' && ch <= 'Z'){
+            ch = ch - k;
+            
+            if(ch < 'A'){
+                ch = ch + 'Z' - 'A' + 1;
+            }
+            
+            d_text[0][i] = ch;
+        }
+    }
+    dump_buffer(d_text[0], e_text_len);
+    printf("\n");
+    
 }

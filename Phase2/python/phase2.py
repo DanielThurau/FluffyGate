@@ -1,9 +1,11 @@
 from __future__ import print_function
 import subprocess 
 from itertools import islice
+from banking_passwords import send_passwords
+import os
+import time
 
-
-aws = {
+password_dict = {
     "itttVNsx5ybFY":"Qheczo",
     "itxLG/AdRAB9A":"Hfgcnw",
     "itcFvZU546v9E":"d9a0us",
@@ -71,19 +73,56 @@ aws = {
     "paUr6ut304RAo":"PbhCEa",
 }
 
+def populate_passwords(dictionary, path_to_cracked):
+    with open(path_to_cracked, "r") as f:
+        for line in f:
+            line = line.split(" ")
+            dictionary[line[0].strip(' \t\r\n')] = line[1].strip(' \t\r\n')
 
 def next_n_lines(file_opened, N):
     return [x.strip() for x in islice(file_opened, N)]
 
-with open("true_sort", 'r') as sample:
-    while True:
-        lines = next_n_lines(sample, 4)
-        if lines == []:
-            exit()
-        else:
+populate_passwords(password_dict, "crackerjacks/cracked_passwords.txt")
 
-            encrypted_pass = subprocess.check_output(['./bin/pcap_open', '-p', lines[0]])
-            encrypted_pass = encrypted_pass[:-1].strip(' \t\r\n')
-            print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', aws[encrypted_pass], lines[1], lines[2], lines[3]]))
+# with open("true_sort", 'r') as sample:
+#     while True:
+#         lines = next_n_lines(sample, 4)
+#         if lines == []:
+#             exit()
+#         else:
 
-            # aws[encrypted_pass]
+#             encrypted_pass = subprocess.check_output(['./bin/pcap_open', '-p', lines[0]])
+#             encrypted_pass = encrypted_pass[:-1].strip(' \t\r\n')
+#             print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', aws[encrypted_pass], lines[1], lines[2], lines[3]]))
+
+#             aws[encrypted_pass]
+
+if __name__ == '__main__':
+    populate_passwords(password_dict, "crackerjacks/cracked_passwords.txt")
+    data_dir = "data/P2/T5/"
+    files = os.listdir(data_dir)
+
+    files = sorted(files, key=lambda e : int(filter(str.isdigit, e)))
+    to_be_cracked = []
+    for p in xrange(0,len(files), 6):
+        e_pass = subprocess.check_output(['./bin/pcap_open', '-u', data_dir + files[p]]).strip(' \t\r\n')
+        if e_pass not in password_dict:
+            to_be_cracked.append(e_pass)
+
+    send_passwords(to_be_cracked)
+    for i in to_be_cracked:
+        while(i not in password_dict):
+            print("sleeping for 60")
+            time.sleep(60)
+            populate_passwords(password_dict, "crackerjacks/cracked_passwords.txt")
+
+    print("All my passwords are there")
+    # #https://stackoverflow.com/questions/3415072/pythonic-way-to-iterate-over-sequence-4-items-at-a-time
+    for p,k,i,c1,c2,c3 in zip(*[iter(files)]*6):
+        e_pass = subprocess.check_output(['./bin/pcap_open', '-u', data_dir+p]).strip(' \t\r\n')
+        print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', password_dict[e_pass], data_dir+k,\
+                                                                     data_dir+i, data_dir+c1]))
+        # print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', password_dict[e_pass], data_dir+k,\
+        #                                                              data_dir+i, data_dir+c2]))
+        # print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', password_dict[e_pass], data_dir+k,\
+                                                                     # data_dir+i, data_dir+c3]))
