@@ -13,7 +13,7 @@
 #include <string.h>
 #define SIZE_PASSWORD 6
 #define WORDCOUNT_TRIGGER 10.0
-#define PERCENT_MATCH 0.05
+#define PERCENT_MATCH 0.08
 
 
 struct Devious{
@@ -178,12 +178,16 @@ int main(int argc, char *argv[]){
                     for(int j = 0; j < 27; j++){
 
                         rot_k(deciphertext, deciphertext_len, d_text, j);
-                        // dump_buffer(d_text[0], deciphertext_len);
+                        if(check_heuristic(d_text[0], deciphertext_len)){
+                            if(strstr(deciphertext, "dthurau") != NULL){
+                                write_buffer("test.txt",d_text[0], deciphertext_len);
+                                // dump_buffer(d_text[0], deciphertext_len);
+                            }
+                            dump_buffer(d_text[0], deciphertext_len);
+                        }
                         
                     }
-                    // if(strstr(deciphertext, "dthurau") != NULL){
-                    //     write_buffer("test.txt",deciphertext, deciphertext_len);
-                    // }
+                    
 
                 }
             }
@@ -306,9 +310,9 @@ void rot_k(char *e_text, int e_text_len, char**d_text, int k){
             }
             
             d_text[0][i] = ch;
+        }else{
+            d_text[0][i] = ch;
         }
     }
-    dump_buffer(d_text[0], e_text_len);
-    printf("\n");
     
 }
