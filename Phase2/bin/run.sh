@@ -79,6 +79,21 @@ else
 	read pcap_cipherfile
 fi
 
-./bin/pcap_open -i $iv -c $pcap_cipherfile -K $data_dir"key" 2>.log
 
+echo "What is the decode style?"
+if [ "$debug" = true ]; then
+	decode_method=$7
+else
+	read decode_method
+fi
+
+
+echo "./bin/pcap_open -i $iv -c $pcap_cipherfile -K $data_dir"key" -d $decode_method 2>.log"
+
+if [ -z "$decode_method" ]
+then
+	./bin/pcap_open -i $iv -c $pcap_cipherfile -K $data_dir"key" 2>.log
+else
+	./bin/pcap_open -i $iv -c $pcap_cipherfile -K $data_dir"key" -d $decode_method 2>.log
+fi
 

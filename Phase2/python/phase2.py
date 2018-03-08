@@ -4,6 +4,7 @@ from itertools import islice
 from banking_passwords import send_passwords
 import os
 import time
+import sys
 
 password_dict = {
     "itttVNsx5ybFY":"Qheczo",
@@ -84,18 +85,6 @@ def next_n_lines(file_opened, N):
 
 populate_passwords(password_dict, "crackerjacks/cracked_passwords.txt")
 
-# with open("true_sort", 'r') as sample:
-#     while True:
-#         lines = next_n_lines(sample, 4)
-#         if lines == []:
-#             exit()
-#         else:
-
-#             encrypted_pass = subprocess.check_output(['./bin/pcap_open', '-p', lines[0]])
-#             encrypted_pass = encrypted_pass[:-1].strip(' \t\r\n')
-#             print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', aws[encrypted_pass], lines[1], lines[2], lines[3]]))
-
-#             aws[encrypted_pass]
 
 if __name__ == '__main__':
     populate_passwords(password_dict, "crackerjacks/cracked_passwords.txt")
@@ -109,6 +98,7 @@ if __name__ == '__main__':
         if e_pass not in password_dict:
             to_be_cracked.append(e_pass)
 
+    print(to_be_cracked)
     send_passwords(to_be_cracked)
     for i in to_be_cracked:
         while(i not in password_dict):
@@ -117,12 +107,19 @@ if __name__ == '__main__':
             populate_passwords(password_dict, "crackerjacks/cracked_passwords.txt")
 
     print("All my passwords are there")
+
+    counter = int(sys.argv[1])
     # #https://stackoverflow.com/questions/3415072/pythonic-way-to-iterate-over-sequence-4-items-at-a-time
     for p,k,i,c1,c2,c3 in zip(*[iter(files)]*6):
+        if counter == 0:
+            break
         e_pass = subprocess.check_output(['./bin/pcap_open', '-u', data_dir+p]).strip(' \t\r\n')
+        # execute_string = "./bin/run.sh true cur/ " + password_dict[e_pass] + " " + data_dir+k+ " " + data_dir+i + " " + data_dir+c1
+        # print(execute_string)
         print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', password_dict[e_pass], data_dir+k,\
-                                                                     data_dir+i, data_dir+c1]))
-        # print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', password_dict[e_pass], data_dir+k,\
-        #                                                              data_dir+i, data_dir+c2]))
+                                                                     data_dir+i, data_dir+c1, "rot_k"]))
+        print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', password_dict[e_pass], data_dir+k,\
+                                                                     data_dir+i, data_dir+c2, "rot_k_perm"]))
         # print(subprocess.check_call(['./bin/run.sh', 'true', 'cur/', password_dict[e_pass], data_dir+k,\
                                                                      # data_dir+i, data_dir+c3]))
+        counter = counter - 1

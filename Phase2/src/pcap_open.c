@@ -33,6 +33,7 @@ int analyze_keys(char **keys, int num_keys, char* iv);
 int check_heuristic(char *text, int text_len);
 int check_ascii(char *text, int text_len);
 void rot_k(char *e_text, int e_text_len, char**d_text, int k);
+void rot_k_perm(char *e_text, int e_text_len, char**d_text, int *k_array);
 
 
 int main(int argc, char *argv[]){
@@ -42,6 +43,7 @@ int main(int argc, char *argv[]){
     char *path_to_keys = NULL;
     char *path_to_cipher = NULL;
     char *path_to_unknown = NULL;
+    char *decode_method = "";
     int size = 32;
     int c;
 
@@ -51,7 +53,7 @@ int main(int argc, char *argv[]){
 
     opterr = 0;
 
-    while((c = getopt (argc, argv, "i:s:p:z:K:k:c:u:")) != -1)
+    while((c = getopt (argc, argv, "i:s:p:z:K:k:c:u:d:")) != -1)
         switch(c){
             case 'i':
                 path_to_iv = optarg;
@@ -77,6 +79,8 @@ int main(int argc, char *argv[]){
                 break;
             case 'u':
                 path_to_unknown = optarg;
+            case 'd':
+                decode_method = optarg;
                 break;
             case '?':
                 if(optopt == 'i')
@@ -172,23 +176,28 @@ int main(int argc, char *argv[]){
         for(int i = 0; i < breakout.num_keys; i++){
             int deciphertext_len = decrypt(breakout.cipher, breakout.cipher_len, breakout.key_set[i], breakout.iv, deciphertext);
             if(deciphertext_len != -1){
+                // dump_buffer(deciphertext, deciphertext_len);
                 if(check_ascii(deciphertext, deciphertext_len)){
+                    if(strcmp(decode_method,"rot_k") == 0){    
                     // dump_buffer(deciphertext, deciphertext_len);
-                    char **d_text = (char**)calloc(1,sizeof(char*));
-                    for(int j = 0; j < 27; j++){
-
-                        rot_k(deciphertext, deciphertext_len, d_text, j);
-                        if(check_heuristic(d_text[0], deciphertext_len)){
-                            if(strstr(deciphertext, "dthurau") != NULL){
-                                write_buffer("test.txt",d_text[0], deciphertext_len);
-                                // dump_buffer(d_text[0], deciphertext_len);
-                            }
-                            dump_buffer(d_text[0], deciphertext_len);
+                        char **d_text = (char**)calloc(1,sizeof(char*));
+                        for(int j = 0; j < 27; j++){
+                            
+                                rot_k(deciphertext, deciphertext_len, d_text, j);
+                                if(check_heuristic(d_text[0], deciphertext_len)){
+                                    if(strstr(deciphertext, "dthurau") != NULL){
+                                        write_buffer("test.txt",d_text[0], deciphertext_len);
+                                        // dump_buffer(d_text[0], deciphertext_len);
+                                    }
+                                    dump_buffer(d_text[0], deciphertext_len);
+                                }
                         }
-                        
+                    }else if(strcmp(decode_method,"rot_k_perm") == 0){
+                        char **d_text = (char**)calloc(1,sizeof(char*));
+                        rot_k_perm(deciphertext, 100, d_text, NULL);
+                    }else{
+                        dump_buffer(deciphertext, deciphertext_len);
                     }
-                    
-
                 }
             }
         }
@@ -316,3 +325,21 @@ void rot_k(char *e_text, int e_text_len, char**d_text, int k){
     }
     
 }
+
+int* rot_k_perm(char *e_text, int e_text_len, char**d_text, int *k_array){
+    char ch;
+    *d_text = (char*)calloc(e_text_len, sizeof(char));
+    int k[e_text_len]; 
+
+    if (k_array == NULL){
+        for(int i = 0; i < e_text_len; i++){
+            
+        }
+
+
+        printf("Testing combos\n");
+    }else{
+        printf("decoding whole message\n");
+    }
+}
+
