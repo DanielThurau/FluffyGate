@@ -5,7 +5,7 @@ CRACK = src/crack/crack.h src/crack/crack.c
 PACKETS = src/packets.h src/packets.c
 
 HEADERS = src/osi_headers.h
-LIBS = -lpcap -lcrypt -lcrypto -lssl
+LIBS = -lpcap -lcrypt -lcrypto -lssl -lm
 
 MAIN_LISTEN = src/pcap_listen.c
 MAIN_OPEN = src/pcap_open.c
@@ -14,13 +14,9 @@ MAIN_SORT = src/pcap_sort.c
 
 all: pcap_listen pcap_open pcap_sort
 
-debug:
-	chmod +x bin/run.sh 
-	bin/run.sh true
-
 test:
-	chmod +x bin/run.sh
-	bin/run.sh false
+	chmod +x ./bin/test_suite.sh
+	./bin/test_suite.sh
 
 
 pcap_listen: $(MAIN_LISTEN) $(CRACK) $(OBF) $(FILEIO) $(PACKETS)

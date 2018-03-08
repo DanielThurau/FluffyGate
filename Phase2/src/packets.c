@@ -35,7 +35,7 @@ char *password_packet(const char *path_to_pass_file){
             return "fluffy";
         }
     }
-    dump_buffer(e_pass, 12);
+    dump_buffer(e_pass, len);
     // crackSingle(salt, e_pass, SIZE_PASSWORD, d_pass);
     return d_pass;
 }

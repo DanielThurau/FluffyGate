@@ -38,6 +38,7 @@ int main(int argc, char *argv[]){
     char *path_to_zip = NULL;
     char *path_to_keys = NULL;
     char *path_to_cipher = NULL;
+    char *path_to_unknown = NULL;
     int size = 32;
     int c;
 
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]){
 
     opterr = 0;
 
-    while((c = getopt (argc, argv, "i:s:p:z:K:k:c:")) != -1)
+    while((c = getopt (argc, argv, "i:s:p:z:K:k:c:u:")) != -1)
         switch(c){
             case 'i':
                 path_to_iv = optarg;
@@ -71,6 +72,9 @@ int main(int argc, char *argv[]){
             case 'c':
                 path_to_cipher = optarg;
                 break;
+            case 'u':
+                path_to_unknown = optarg;
+                break;
             case '?':
                 if(optopt == 'i')
                     fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -78,6 +82,12 @@ int main(int argc, char *argv[]){
             default:
                 abort();
         }
+    if(path_to_unknown != NULL){
+        u_char *raw = calloc(1000, sizeof(char));
+        int len = unpack(path_to_unknown, &raw);
+        if(len > 0)
+            dump_buffer(raw, len);  
+    }
 
    
     if(path_to_iv != NULL){
@@ -161,7 +171,9 @@ int main(int argc, char *argv[]){
             if(deciphertext_len != -1){
                 if(check_heuristic(deciphertext, deciphertext_len)){
                     // write_buffer("test.txt",deciphertext, deciphertext_len);
-                    dump_buffer(deciphertext, deciphertext_len);
+                    if(strstr(deciphertext, "dthurau") != NULL){
+                        write_buffer("test.txt",deciphertext, deciphertext_len);
+                    }
 
                 }
             }

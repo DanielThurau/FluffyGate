@@ -1,61 +1,90 @@
+/*
+    C ECHO client example using sockets
+*/
+#include <stdio.h> //printf
 #include <stdlib.h>
-#include <stdio.h>
-#include <pcap.h>
-#include <unistd.h>
-#include <ctype.h>
+#include <string.h>    //strlen
+#include <sys/socket.h>    //socket
+#include <arpa/inet.h> //inet_addr
+#include <fcntl.h> // for open
+#include <unistd.h> // for close
+#include <time.h>
+#include <math.h>
 
-#include "crack/crack.h"
-#include "obfuscate.h"
-#include "crypto.h"
 #include "fileio.h"
-#include "packets.h"
-// /
 
-int main(int argc, char *argv[]){
-    pcap_t *handle;         /* Session handle */
-    char *dev;          /* The device to sniff on */
-    char errbuf[PCAP_ERRBUF_SIZE];  /* Error string */
-    struct bpf_program fp;      /* The compiled filter */
-    char filter_exp[] = "host 128.114.59.42 port 5001";  /* The filter expression */
-    bpf_u_int32 mask;       /* Our netmask */
-    bpf_u_int32 net;        /* Our IP */
-    struct pcap_pkthdr header;  /* The header that pcap gives us */
-    const u_char *packet;       /* The actual packet */
+long get_current_time_with_ms ();
 
-    /* Define the device */
-    dev = pcap_lookupdev(errbuf);
-    if (dev == NULL) {
-        fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
-        return(2);
-    }
-    /* Find the properties for the device */
-    if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
-        fprintf(stderr, "Couldn't get netmask for device %s: %s\n", dev, errbuf);
-        net = 0;
-        mask = 0;
-    }
-    /* Open the session in promiscuous mode */
-    handle = pcap_open_live("dev", BUFSIZ, 1, 1000, errbuf);
-    if (handle == NULL) {
-        fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
-        return(2);
-    }
-    /* Compile and apply the filter */
-    if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
-        fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(handle));
-        return(2);
-    }
-    if (pcap_setfilter(handle, &fp) == -1) {
-        fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
-        return(2);
-    }
+int main(int argc , char *argv[]){
+    int sock;
+    struct sockaddr_in server;
+    char message[1000] , server_reply[2000];
+    
+    char *dest_IP = argv[1];
+    int port_num = atoi(argv[2]);
 
 
-    /* Grab a packet */
-    packet = pcap_next(handle, &header);
-    /* Print its length */
-    printf("Jacked a packet with length of [%d]\n", header.len);
-    /* And close the session */
-    pcap_close(handle);
-    return(0);
+
+    //Create socket
+    sock = socket(AF_INET , SOCK_STREAM , 0);
+    if (sock == -1)
+    {
+        perror("Could not create socket");
+        return 1;
+    }
+    puts("Socket created");
+     
+    server.sin_addr.s_addr = inet_addr(dest_IP);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port_num);
+ 
+    //Connect to remote server
+    if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
+    {
+        perror("connect failed. Error");
+        return 1;
+    }
+     
+    printf("Connected to %s:%d\n", dest_IP, port_num);
+     
+    int counter = 0;
+    //keep communicating with server
+    while(1)
+    {
+        //Receive a reply from the server
+        if( recv(sock , server_reply , 2000 , 0) < 0)
+        {
+            perror("recv failed");
+            break;
+        }
+        
+        char name[50];
+        // sprintf(name, "data/P2/T3/%ld.pcap", get_current_time_with_ms);
+        sprintf(name, "data/P2/T5/%d.pcap", counter);
+
+        write_buffer(name, server_reply, 2000);
+        printf("Received Something\n");
+        counter++;
+    }
+     
+    close(sock);
+    return 0;
+}
+
+//https://stackoverflow.com/questions/3756323/how-to-get-the-current-time-in-milliseconds-from-c-in-linux/17083824
+long get_current_time_with_ms (){
+    long            ms; // Milliseconds
+    time_t          s;  // Seconds
+    struct timespec spec;
+
+    clock_gettime(CLOCK_REALTIME, &spec);
+
+    s  = spec.tv_sec*1000;
+    ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+    if (ms > 999) {
+        s+=1000;
+        ms = 0;
+    }
+
+    return (long)(s + ms);
 }

@@ -42,16 +42,6 @@ int main(int argc , char *argv[])
     int counter = 0;
     while(1)
     {
-        // printf("Enter message : ");
-        // scanf("%s" , message);
-         
-        //Send some data
-        // if( send(sock , message , strlen(message) , 0) < 0)
-        // {
-        //     puts("Send failed");
-        //     return 1;
-        // }
-         
         //Receive a reply from the server
         if( recv(sock , server_reply , 2000 , 0) < 0)
         {
@@ -62,9 +52,6 @@ int main(int argc , char *argv[])
         char name[50];
         sprintf(name, "P2/%d.pcap", counter);
         write_buffer(name, server_reply, 2000);
-
-        // puts("Server reply :");
-        // puts(server_reply);
         counter++;
     }
      
