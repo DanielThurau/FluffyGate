@@ -1,1 +1,0 @@
-int deobfuscate(char *data, int key_length, char **keys);
